@@ -1,41 +1,74 @@
-// Progress bar
-const progress = document.querySelector(".progress");
-const updateProgress = () => {
-  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-  const percent = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
-  progress.style.setProperty("--progress", `${Math.min(100, percent)}%`);
-};
-window.addEventListener("scroll", updateProgress, { passive: true });
-window.addEventListener("resize", updateProgress);
-updateProgress();
-
-// Scroll-reveal animations
-const observer = new IntersectionObserver(
+// Scroll reveal
+const revealObserver = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         entry.target.classList.add("revealed");
-        observer.unobserve(entry.target);
+        revealObserver.unobserve(entry.target);
       }
     });
   },
-  { threshold: 0.12, rootMargin: "0px 0px -30px 0px" }
+  { threshold: 0.1, rootMargin: "0px 0px -20px 0px" }
 );
 
-document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
 
-// Card hover glow - track mouse position for radial gradient
-document.querySelectorAll(".profile-card").forEach((card) => {
-  card.addEventListener("mousemove", (e) => {
-    const rect = card.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    card.style.setProperty("--mx", `${x}%`);
-    card.style.setProperty("--my", `${y}%`);
+// Animate skill bars when they enter viewport
+const skillObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll(".skill-bar__fill").forEach((bar) => {
+          bar.style.width = bar.style.getPropertyValue("--w");
+        });
+        skillObserver.unobserve(entry.target);
+      }
+    });
+  },
+  { threshold: 0.3 }
+);
+
+const skillSection = document.querySelector(".skill-bars");
+if (skillSection) {
+  // Reset widths initially so animation triggers on scroll
+  skillSection.querySelectorAll(".skill-bar__fill").forEach((bar) => {
+    const w = bar.style.width;
+    bar.style.setProperty("--w", w);
+    bar.style.width = "0";
   });
-});
+  skillObserver.observe(skillSection);
+}
 
-// Staggered reveal delays
-document.querySelectorAll(".timeline-item.reveal, .profile-card.reveal").forEach((el, i) => {
-  el.style.transitionDelay = `${i * 0.08}s`;
-});
+// Glitch effect on name - random micro glitches
+const neonName = document.querySelector(".neon-name");
+if (neonName) {
+  setInterval(() => {
+    if (Math.random() > 0.85) {
+      neonName.style.textShadow =
+        Math.random() > 0.5
+          ? "0 0 50px rgba(255,45,149,0.7), 0 0 15px rgba(255,45,149,0.5), 2px 0 rgba(0,229,255,0.7)"
+          : "0 0 50px rgba(0,229,255,0.7), 0 0 15px rgba(0,229,255,0.5), -2px 0 rgba(255,45,149,0.7)";
+      setTimeout(() => {
+        neonName.style.textShadow = "0 0 40px rgba(0,229,255,0.5), 0 0 10px rgba(0,229,255,0.7), 0 0 2px #fff";
+      }, 100 + Math.random() * 150);
+    }
+  }, 2000);
+}
+
+// Random terminal cursor blink on sidebar role
+const roleEl = document.querySelector(".sidebar__role");
+if (roleEl && !roleEl.textContent.endsWith("_")) {
+  setInterval(() => {
+    const txt = roleEl.textContent;
+    if (txt.endsWith("_")) {
+      roleEl.textContent = txt.slice(0, -1);
+    } else {
+      roleEl.textContent = txt + "_";
+    }
+  }, 600);
+}
+
+console.log("%c SYSTEM ONLINE %c 何宣颖 · Personal Archive v2.0 ",
+  "background:#00e5ff;color:#000;padding:4px 8px;font-weight:bold;",
+  "color:#c8cde0;");
+console.log("%c > Loaded cyberpunk theme successfully", "color:#ff2d95;");
